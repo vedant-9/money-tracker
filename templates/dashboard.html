@@ -1,0 +1,89 @@
+{% extends 'base.html' %} {% block body %}
+  <div class="bg-light d-flex justify-content-between h4 p-3">
+    <div>List of Transactions associated with {{cur_user.name}}</div>
+    <div>Total Expense: Rs. 
+      {{transactions | sum(attribute='amount') | round(2)}}
+    </div>
+  </div>
+  <table class="table table-striped">
+    <thead>
+      <tr>         
+        <th scope="col">Description</th>
+        <th scope="col">Date</th>
+        <th scope="col">Amount</th>
+        <th scope="col">Bill Paid by</th>
+        <th scope="col">Split Paid by</th>
+        <th scope="col">Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{transaction.description}}</td>
+        <td>{{transaction.date}}</td>
+        <td>Rs. {{transaction.amount}}</td>
+        <td>{{users[transaction.payer_id].name}}</td>
+        <td>{{users[transaction.payee_id].name}}</td>
+        <td>
+          <form action="{{url_for('delete_transaction', id=transaction.id)}}" method="POST">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <form class="p-5" action="{{url_for('dashboard')}}" method="POST">
+    <div class="form-group">
+      <label for="description" class="h4">Description</label>
+      <input
+        type="text"
+        class="form-control"
+        name="description"
+        placeholder="Enter Description"
+      />
+    </div>
+    <div class="form-group">
+      <label for="amount" class="h4">Bill amount to be split</label>
+      <input
+        type="text"
+        class="form-control"
+        name="amount"
+        placeholder="Enter Bill Amount"
+      />
+    </div>
+    <div class="form-group">
+      <!-- checkboxes for selection of users to split bill with -->
+      <label for="payee" class="h4">Split bill with</label>
+      {% for id,user in users.items() %}
+        {% if id != cur_user.id %} 
+        <div class="form-check">
+          <input
+          class="form-check-input"
+          type="checkbox"
+          name="payee"
+          value="{{id}}"
+          id="{{id}}"
+          />
+          <label class="form-check-label" for="{{id}}">
+            {{user.name}}
+          </label>
+        </div>
+        {% endif %}
+      {% endfor %}
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="payee"
+          value="{{cur_user.id}}"
+          id="{{cur_user.id}}"
+        />
+        <label class="form-check-label" for="{{cur_user.id}}">
+          Include me
+        </label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add transaction Split</button>
+  </form>
+{% endblock %}
